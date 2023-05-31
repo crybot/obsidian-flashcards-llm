@@ -10,10 +10,10 @@ const DEFAULT_SETTINGS: FlashcardsSettings = {
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
-	settings: FlashcardsSettings;
+  settings: FlashcardsSettings;
 
-	async onload() {
-		await this.loadSettings();
+  async onload() {
+    await this.loadSettings();
 
     this.addCommand({
       id: "generate-flashcards",
@@ -23,9 +23,9 @@ export default class FlashcardsLLMPlugin extends Plugin {
       },
     });
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new FlashcardsSettingsTab(this.app, this));
-	}
+    // This adds a settings tab so the user can configure various aspects of the plugin
+    this.addSettingTab(new FlashcardsSettingsTab(this.app, this));
+  }
 
   async onGenerateFlashcards(editor: Editor, view: MarkdownView) {
     const apiKey = this.settings.apiKey;
@@ -72,17 +72,17 @@ export default class FlashcardsLLMPlugin extends Plugin {
     }
   }
 
-	onunload() {
+  onunload() {
 
-	}
+  }
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 }
 
 class FlashcardsSettingsTab extends PluginSettingTab {
@@ -97,19 +97,19 @@ class FlashcardsSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
 
     containerEl.empty();
-		containerEl.createEl('h2', {text: 'Settings Flashcards LLM.'});
+    containerEl.createEl('h2', {text: 'Settings Flashcards LLM.'});
 
     new Setting(containerEl)
-      .setName("OpenAI API Key")
-      .setDesc("Enter your OpenAI API key")
-      .addText((text) =>
-        text
-          .setPlaceholder("API key")
-          .setValue(this.plugin.settings.apiKey)
-          .onChange(async (value) => {
-            this.plugin.settings.apiKey = value;
-            await this.plugin.saveSettings();
-          })
-      );
+    .setName("OpenAI API Key")
+    .setDesc("Enter your OpenAI API key")
+    .addText((text) =>
+      text
+      .setPlaceholder("API key")
+      .setValue(this.plugin.settings.apiKey)
+      .onChange(async (value) => {
+        this.plugin.settings.apiKey = value;
+        await this.plugin.saveSettings();
+      })
+    );
   }
 }
