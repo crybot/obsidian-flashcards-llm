@@ -99,7 +99,7 @@ class FlashcardsSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-    .setName("OpenAI API Key")
+    .setName("OpenAI API key")
     .setDesc("Enter your OpenAI API key")
     .addText((text) =>
       text
