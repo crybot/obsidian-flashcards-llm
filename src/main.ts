@@ -97,7 +97,6 @@ class FlashcardsSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
 
     containerEl.empty();
-    containerEl.createEl('h2', {text: 'Settings Flashcards LLM.'});
 
     new Setting(containerEl)
     .setName("OpenAI API Key")
