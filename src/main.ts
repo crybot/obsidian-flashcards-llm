@@ -3,10 +3,12 @@ import { generateFlashcards } from "./flashcards";
 
 interface FlashcardsSettings {
   apiKey: string;
+  model: string;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
   apiKey: "",
+  model: "text-davinci-003"
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -29,6 +31,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
   async onGenerateFlashcards(editor: Editor, view: MarkdownView) {
     const apiKey = this.settings.apiKey;
+    const model = this.settings.model;
     if (!apiKey) {
       new Notice("API key is not set in plugin settings");
       return;
@@ -40,7 +43,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
     const hasHeader = headerRegex.test(currentText);
 
     // Check if the #flashcards tag is already present
-    const tagRegex = /\n#flashcards\n/;
+    const tagRegex = /\n#flashcards.*\n/;
     const hasTag = tagRegex.test(currentText);
 
     let updatedText = currentText;
@@ -57,8 +60,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
     new Notice("Generating flashcards...");
     try {
-      const generatedCards = (await generateFlashcards(updatedText, apiKey)).split("\n");
-      editor.setValue(updatedText + "\n" + generatedCards.join('\n\n'))
+      const generatedCards = (await generateFlashcards(updatedText, apiKey, model)).split("\n");
+      editor.setValue(updatedText + "\n\n" + generatedCards.map(s => s.trim()).join('\n\n'))
 
       const newPosition: EditorPosition = {
         line: editor.lastLine()
@@ -107,6 +110,20 @@ class FlashcardsSettingsTab extends PluginSettingTab {
       .setValue(this.plugin.settings.apiKey)
       .onChange(async (value) => {
         this.plugin.settings.apiKey = value;
+        await this.plugin.saveSettings();
+      })
+    );
+
+    new Setting(containerEl)
+    .setName("Model")
+    .setDesc("Which language model to use")
+    .addDropdown((dropdown) =>
+      dropdown
+      .addOption("text-davinci-003", "text-davinci-003")
+      .addOption("gpt-3.5-turbo", "gpt-3.5-turbo")
+      .setValue(this.plugin.settings.model)
+      .onChange(async (value) => {
+        this.plugin.settings.model = value;
         await this.plugin.saveSettings();
       })
     );
