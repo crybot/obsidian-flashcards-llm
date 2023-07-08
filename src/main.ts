@@ -4,11 +4,13 @@ import { generateFlashcards } from "./flashcards";
 interface FlashcardsSettings {
   apiKey: string;
   model: string;
+  inlineSeparator: string;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
   apiKey: "",
-  model: "text-davinci-003"
+  model: "text-davinci-003",
+  inlineSeparator: "::"
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -31,11 +33,13 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
   async onGenerateFlashcards(editor: Editor, view: MarkdownView) {
     const apiKey = this.settings.apiKey;
-    const model = this.settings.model;
     if (!apiKey) {
       new Notice("API key is not set in plugin settings");
       return;
     }
+
+    const sep = this.settings.inlineSeparator
+    const model = this.settings.model;
 
     const currentText = editor.getValue();
     // Check if the header is already present
@@ -60,7 +64,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
     new Notice("Generating flashcards...");
     try {
-      const generatedCards = (await generateFlashcards(updatedText, apiKey, model)).split("\n");
+      const generatedCards = (await generateFlashcards(updatedText, apiKey, model, sep)).split("\n");
       editor.setValue(updatedText + "\n\n" + generatedCards.map(s => s.trim()).join('\n\n'))
 
       const newPosition: EditorPosition = {
@@ -101,6 +105,8 @@ class FlashcardsSettingsTab extends PluginSettingTab {
 
     containerEl.empty();
 
+    containerEl.createEl("h3", {text: "Model settings"})
+
     new Setting(containerEl)
     .setName("OpenAI API key")
     .setDesc("Enter your OpenAI API key")
@@ -127,5 +133,22 @@ class FlashcardsSettingsTab extends PluginSettingTab {
         await this.plugin.saveSettings();
       })
     );
+
+    containerEl.createEl("h3", {text: "Preferences"})
+
+    new Setting(containerEl)
+    .setName("Separator for inline flashcards")
+    .setDesc("Note that after changing this you have to manually edit any flashcards you already have")
+    .addText((text) =>
+      text
+      .setPlaceholder("::")
+      .setValue(this.plugin.settings.inlineSeparator)
+      .onChange(async (value) => {
+        this.plugin.settings.inlineSeparator = value;
+        await this.plugin.saveSettings();
+      })
+    );
+
+
   }
 }
