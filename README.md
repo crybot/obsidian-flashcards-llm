@@ -5,8 +5,9 @@ This plugin allows you to automatically generate flashcards using Large Language
 ## Features
 - OpenAI's `text-davinci-003` and `gpt-3.5-turbo` integrations through official APIs. You can add your api-key under the plugin settings and choose which language model to use.
 - Generate flashcards from any open note by running the `Generate Flashcards` command from the command palette. The generated flashcards will be appended to the current note, under a new markdown header.
+- Customize the separator to use for generating inline flashcards.
 
-**Note**: As of today, the plugin works with [obsidian-spaced-repetition](https://github.com/st3v3nmw/obsidian-spaced-repetition) in mind, with the default formatting settings. The plugin will only generate inline flashcards with the format *Q::A*. Future updates will make this customizable through the settings.
+**Note**: The plugin works with [obsidian-spaced-repetition](https://github.com/st3v3nmw/obsidian-spaced-repetition) in mind. As of today it can only generate inline flashcards in the format that you choose. Future updates will make more customizations available (including multiline flashcards, reversed flashcards and more).
 
 ## Demo
 <img src="https://github.com/crybot/obsidian-flashcards-llm/blob/master/docs/flashcards.gif">
