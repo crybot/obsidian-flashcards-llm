@@ -41,31 +41,38 @@ export default class FlashcardsLLMPlugin extends Plugin {
     const sep = this.settings.inlineSeparator
     const model = this.settings.model;
 
-    const currentText = editor.getValue();
+    const wholeText = editor.getValue()
+    const currentText = (editor.somethingSelected() ? editor.getSelection() : wholeText)
     // Check if the header is already present
     const headerRegex = /\n\n### Generated Flashcards\n/;
-    const hasHeader = headerRegex.test(currentText);
+    const hasHeader = headerRegex.test(wholeText);
 
     // Check if the #flashcards tag is already present
     const tagRegex = /\n#flashcards.*\n/;
-    const hasTag = tagRegex.test(currentText);
+    const hasTag = tagRegex.test(wholeText);
 
-    let updatedText = currentText;
-
-    // Generate and add the header if not already present
-    if (!hasHeader) {
-      updatedText += "\n\n### Generated Flashcards\n";
-    }
-
-    // Generate and add the #flashcards tag if not already present
-    if (!hasTag) {
-      updatedText += "#flashcards\n";
-    }
 
     new Notice("Generating flashcards...");
     try {
-      const generatedCards = (await generateFlashcards(updatedText, apiKey, model, sep)).split("\n");
-      editor.setValue(updatedText + "\n\n" + generatedCards.map(s => s.trim()).join('\n\n'))
+      const generatedCards = (await generateFlashcards(currentText, apiKey, model, sep)).split("\n");
+      editor.setCursor(editor.lastLine())
+
+      let updatedText = "";
+
+      // Generate and add the header if not already present
+      if (!hasHeader) {
+        updatedText += "\n\n### Generated Flashcards\n";
+      }
+
+      // Generate and add the #flashcards tag if not already present
+      if (!hasTag) {
+        updatedText += "#flashcards\n";
+      }
+
+      updatedText += "\n\n" + generatedCards.map(s => s.trim()).join('\n\n');
+
+      editor.replaceRange(updatedText, editor.getCursor())
+
 
       const newPosition: EditorPosition = {
         line: editor.lastLine()
