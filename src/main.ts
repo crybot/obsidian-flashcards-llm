@@ -8,6 +8,7 @@ interface FlashcardsSettings {
   inlineSeparator: string;
   flashcardsCount: int;
   additionalPrompt: string;
+  maxTokens: int;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
@@ -15,7 +16,8 @@ const DEFAULT_SETTINGS: FlashcardsSettings = {
   model: "text-davinci-003",
   inlineSeparator: "::",
   flashcardsCount: 3,
-  additionalPrompt: ""
+  additionalPrompt: "",
+  maxTokens: 300
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -49,15 +51,20 @@ export default class FlashcardsLLMPlugin extends Plugin {
     }
 
     const sep = this.settings.inlineSeparator
-    let flashcardsCount = Math.trunc(Number(this.settings.flashcardsCount))
 
+    let flashcardsCount = Math.trunc(Number(this.settings.flashcardsCount))
     if (!Number.isFinite(flashcardsCount) || flashcardsCount <= 0) {
-      console.error(flashcardsCount)
       new Notice("Please provide a correct number of flashcards to generate. Defaulting to 3")
       flashcardsCount = 3
     }
 
     const additionalPrompt = this.settings.additionalPrompt
+
+    let maxTokens = Math.trunc(Number(this.settings.maxTokens))
+    if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
+      new Notice("Please provide a correct number of maximum tokens to generate. Defaulting to 300")
+      maxTokens = 300
+    }
 
     const wholeText = editor.getValue()
     const currentText = (editor.somethingSelected() ? editor.getSelection() : wholeText)
@@ -78,7 +85,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
         model,
         sep,
         flashcardsCount,
-        additionalPrompt
+        additionalPrompt,
+        maxTokens
       )).split("\n");
       editor.setCursor(editor.lastLine())
 
@@ -204,6 +212,19 @@ class FlashcardsSettingsTab extends PluginSettingTab {
       .setValue(this.plugin.settings.additionalPrompt)
       .onChange(async (value) => {
         this.plugin.settings.additionalPrompt = value;
+        await this.plugin.saveSettings();
+      })
+    );
+
+    new Setting(containerEl)
+    .setName("Maximum output tokens")
+    .setDesc("Set this to the total number of tokens the model can generate")
+    .addText((text) =>
+      text
+      .setPlaceholder(300)
+      .setValue(this.plugin.settings.maxTokens)
+      .onChange(async (value) => {
+        this.plugin.settings.maxTokens = value;
         await this.plugin.saveSettings();
       })
     );

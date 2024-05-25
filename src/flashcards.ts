@@ -2,10 +2,8 @@ import { Configuration, OpenAIApi } from "openai";
 import { availableChatModels, availableCompletionModels } from "./models.ts";
 
 // TODO:
-// - max tokens
-// - temperature
+// - custom temperature
 // - custom system prompt (?)
-// - custom user prompt (?)
 
 class OpenAIError extends Error {
   constructor(message: string) {
@@ -33,6 +31,7 @@ export async function generateFlashcards(
   model: string = "text-davinci-003",
   sep: string = "::",
   flashcardsCount: int = 3,
+  maxTokens: int = 300,
   additionalInfo: string = ""
 ): Promise<string> {
 
@@ -47,8 +46,6 @@ export async function generateFlashcards(
 
   let basePrompt = `You will be provided you with a note. At the end of the note are some flashcards. Identify which are the most important concepts within the note and generate exactly ${flashcardsCount} new original flashcard in the format \"question ${sep} answer\". Strictly use ${sep} to separate a question from its answer. Separate flashcards with a single newline. An example is \"What is chemical formula of water ${sep} H2O\". Do not use any prefix text, start generating right away. Try to make them as atomic as possible, but still challenging and rich of information. Do not repeat or rephrase flashcards. Focus on important latex formulas and equations. Please typeset equations and math formulas correctly (that is using the \$ symbol without trailing spaces)`;
 
-  // const additionalPrompt = "Additional information on the task: Focus primarily on formulas and equations. Do NOT always start the questions with What. Do not repeat questions. Do not rephrase questions already generated. You can also ask the user to describe something or detail a given concept. You can even write flashcards asking to fill a missing word or phrase.";
-    
   if (additionalInfo) {
     basePrompt = basePrompt +
       `\nAdditional instructions for the task (ignore anything unrelated to \
