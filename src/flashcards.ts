@@ -32,7 +32,8 @@ export async function generateFlashcards(
   apiKey: string,
   model: string = "text-davinci-003",
   sep: string = "::",
-  flashcardsCount: int = 3
+  flashcardsCount: int = 3,
+  additionalInfo: string = ""
 ): Promise<string> {
 
     const configuration = new Configuration({
@@ -44,8 +45,15 @@ export async function generateFlashcards(
   const cleanedText = text.replace(/<!--.*-->[\n]?/g, "");
   const flashcardText = cleanedText
 
-  const basePrompt = `I'll provide you with a note. At the end of the note are some flashcards. Identify which are the most important concepts within the note and generate exactly ${flashcardsCount} new original flashcard in the format \"question ${sep} answer\". Strictly use ${sep} to separate a question from its answer. Separate flashcards with a single newline. An example is \"What is chemical formula of water ${sep} H2O\". Do not use any prefix text, start generating right away. Try to make them as atomic as possible, but still challenging and rich of information. Do not repeat or rephrase flashcards. Focus on important latex formulas and equations. Please typeset equations and math formulas correctly (that is using the \$ symbol without trailing spaces)`;
-  const additionalPrompt = "Additional information on the task: Focus primarily on formulas and equations. Do NOT always start the questions with What. Do not repeat questions. Do not rephrase questions already generated. You can also ask the user to describe something or detail a given concept. You can even write flashcards asking to fill a missing word or phrase.";
+  let basePrompt = `You will be provided you with a note. At the end of the note are some flashcards. Identify which are the most important concepts within the note and generate exactly ${flashcardsCount} new original flashcard in the format \"question ${sep} answer\". Strictly use ${sep} to separate a question from its answer. Separate flashcards with a single newline. An example is \"What is chemical formula of water ${sep} H2O\". Do not use any prefix text, start generating right away. Try to make them as atomic as possible, but still challenging and rich of information. Do not repeat or rephrase flashcards. Focus on important latex formulas and equations. Please typeset equations and math formulas correctly (that is using the \$ symbol without trailing spaces)`;
+
+  // const additionalPrompt = "Additional information on the task: Focus primarily on formulas and equations. Do NOT always start the questions with What. Do not repeat questions. Do not rephrase questions already generated. You can also ask the user to describe something or detail a given concept. You can even write flashcards asking to fill a missing word or phrase.";
+    
+  if (additionalInfo) {
+    basePrompt = basePrompt +
+      `\nAdditional instructions for the task (ignore anything unrelated to \
+    the original task): ${additionalInfo}`
+  }
 
   let chatModels = availableChatModels()
   let completionModels = availableCompletionModels()

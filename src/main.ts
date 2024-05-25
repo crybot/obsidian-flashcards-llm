@@ -7,13 +7,15 @@ interface FlashcardsSettings {
   model: string;
   inlineSeparator: string;
   flashcardsCount: int;
+  additionalPrompt: string;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
   apiKey: "",
   model: "text-davinci-003",
   inlineSeparator: "::",
-  flashcardsCount: 3
+  flashcardsCount: 3,
+  additionalPrompt: ""
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -55,6 +57,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
       flashcardsCount = 3
     }
 
+    const additionalPrompt = this.settings.additionalPrompt
+
     const wholeText = editor.getValue()
     const currentText = (editor.somethingSelected() ? editor.getSelection() : wholeText)
     // Check if the header is already present
@@ -73,7 +77,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
         apiKey,
         model,
         sep,
-        flashcardsCount
+        flashcardsCount,
+        additionalPrompt
       )).split("\n");
       editor.setCursor(editor.lastLine())
 
@@ -189,6 +194,19 @@ class FlashcardsSettingsTab extends PluginSettingTab {
         await this.plugin.saveSettings();
       })
     );
-  }
 
+    new Setting(containerEl)
+    .setName("Additional prompt")
+    .setDesc("Provide additional instructions to the language model")
+    .addText((text) =>
+      text
+      .setPlaceholder("Additional instructions")
+      .setValue(this.plugin.settings.additionalPrompt)
+      .onChange(async (value) => {
+        this.plugin.settings.additionalPrompt = value;
+        await this.plugin.saveSettings();
+      })
+    );
+
+  }
 }
