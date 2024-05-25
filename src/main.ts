@@ -1,14 +1,14 @@
 import { App, Editor, EditorPosition, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { generateFlashcards } from "./flashcards";
-import { availableChatModels, availableCompletionModels } from "./models.ts";
+import { availableChatModels, availableCompletionModels } from "./models";
 
 interface FlashcardsSettings {
   apiKey: string;
   model: string;
   inlineSeparator: string;
-  flashcardsCount: int;
+  flashcardsCount: number;
   additionalPrompt: string;
-  maxTokens: int;
+  maxTokens: number;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
@@ -52,7 +52,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
     const sep = this.settings.inlineSeparator
 
-    let flashcardsCount = Math.trunc(Number(this.settings.flashcardsCount))
+    let flashcardsCount = Math.trunc(this.settings.flashcardsCount)
     if (!Number.isFinite(flashcardsCount) || flashcardsCount <= 0) {
       new Notice("Please provide a correct number of flashcards to generate. Defaulting to 3")
       flashcardsCount = 3
@@ -60,7 +60,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
     const additionalPrompt = this.settings.additionalPrompt
 
-    let maxTokens = Math.trunc(Number(this.settings.maxTokens))
+    let maxTokens = Math.trunc(this.settings.maxTokens)
     if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
       new Notice("Please provide a correct number of maximum tokens to generate. Defaulting to 300")
       maxTokens = 300
@@ -108,6 +108,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
 
       const newPosition: EditorPosition = {
+        ch: 0,
         line: editor.lastLine()
       }
       editor.setCursor(newPosition)
@@ -195,10 +196,10 @@ class FlashcardsSettingsTab extends PluginSettingTab {
       "generate each time a new `Generate Flashcards` command is issued")
     .addText((text) =>
       text
-      .setPlaceholder(3)
-      .setValue(this.plugin.settings.flashcardsCount)
+      .setPlaceholder("3")
+      .setValue(this.plugin.settings.flashcardsCount.toString())
       .onChange(async (value) => {
-        this.plugin.settings.flashcardsCount = value;
+        this.plugin.settings.flashcardsCount = Number(value);
         await this.plugin.saveSettings();
       })
     );
@@ -221,10 +222,10 @@ class FlashcardsSettingsTab extends PluginSettingTab {
     .setDesc("Set this to the total number of tokens the model can generate")
     .addText((text) =>
       text
-      .setPlaceholder(300)
-      .setValue(this.plugin.settings.maxTokens)
+      .setPlaceholder("300")
+      .setValue(this.plugin.settings.maxTokens.toString())
       .onChange(async (value) => {
-        this.plugin.settings.maxTokens = value;
+        this.plugin.settings.maxTokens = Number(value);
         await this.plugin.saveSettings();
       })
     );

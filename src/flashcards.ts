@@ -1,5 +1,5 @@
 import { Configuration, OpenAIApi } from "openai";
-import { availableChatModels, availableCompletionModels } from "./models.ts";
+import { availableChatModels, availableCompletionModels } from "./models";
 
 // TODO:
 // - custom temperature
@@ -30,9 +30,9 @@ export async function generateFlashcards(
   apiKey: string,
   model: string = "text-davinci-003",
   sep: string = "::",
-  flashcardsCount: int = 3,
-  maxTokens: int = 300,
-  additionalInfo: string = ""
+  flashcardsCount: number = 3,
+  additionalInfo: string = "",
+  maxTokens: number = 300
 ): Promise<string> {
 
     const configuration = new Configuration({
@@ -66,7 +66,8 @@ export async function generateFlashcards(
           top_p: 1.0,
           messages: [{role: "system", content: basePrompt}, {role: "user", content: flashcardText}],
       }, { timeout: 60000 });
-    return response.data.choices[0].message.content.trim();
+
+    response = response?.data?.choices[0]?.message?.content?.trim() ?? null;
   }
 
   else if(completionModels.includes(model)) {
@@ -81,13 +82,17 @@ export async function generateFlashcards(
       frequency_penalty: 0,
       presence_penalty: 0,
     });
-    return response.data.choices[0].text.trim();
+    response = response?.data?.choices[0]?.text?.trim() ?? null;
   }
   else {
     throw new Error(`Invalid model name ${model}`)
   }
-  
-  throw new OpenAIError("No response received from OpenAI API");
-  console.log(response)
+
+  if (!response) {
+    throw new OpenAIError("No response received from OpenAI API");
+    console.log(response)
+  }
+
+  return response
 
 }
