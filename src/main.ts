@@ -1,5 +1,6 @@
 import { App, Editor, EditorPosition, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { generateFlashcards } from "./flashcards";
+import { availableChatModels, availableCompletionModels } from "./models.ts";
 
 interface FlashcardsSettings {
   apiKey: string;
@@ -37,9 +38,13 @@ export default class FlashcardsLLMPlugin extends Plugin {
       new Notice("API key is not set in plugin settings");
       return;
     }
+    const model = this.settings.model;
+    if (!model) {
+      new Notice("Please select a model to use in the plugin settings");
+      return;
+    }
 
     const sep = this.settings.inlineSeparator
-    const model = this.settings.model;
 
     const wholeText = editor.getValue()
     const currentText = (editor.somethingSelected() ? editor.getSelection() : wholeText)
@@ -132,8 +137,8 @@ class FlashcardsSettingsTab extends PluginSettingTab {
     .setDesc("Which language model to use")
     .addDropdown((dropdown) =>
       dropdown
-      .addOption("text-davinci-003", "text-davinci-003")
-      .addOption("gpt-3.5-turbo", "gpt-3.5-turbo")
+      .addOptions(Object.fromEntries(availableCompletionModels().map(k => [k, k])))
+      .addOptions(Object.fromEntries(availableChatModels().map(k => [k, k])))
       .setValue(this.plugin.settings.model)
       .onChange(async (value) => {
         this.plugin.settings.model = value;
