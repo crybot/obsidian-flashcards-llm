@@ -6,12 +6,14 @@ interface FlashcardsSettings {
   apiKey: string;
   model: string;
   inlineSeparator: string;
+  flashcardsCount: int;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
   apiKey: "",
   model: "text-davinci-003",
-  inlineSeparator: "::"
+  inlineSeparator: "::",
+  flashcardsCount: 3
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -45,6 +47,13 @@ export default class FlashcardsLLMPlugin extends Plugin {
     }
 
     const sep = this.settings.inlineSeparator
+    let flashcardsCount = Math.trunc(Number(this.settings.flashcardsCount))
+
+    if (!Number.isFinite(flashcardsCount) || flashcardsCount <= 0) {
+      console.error(flashcardsCount)
+      new Notice("Please provide a correct number of flashcards to generate. Defaulting to 3")
+      flashcardsCount = 3
+    }
 
     const wholeText = editor.getValue()
     const currentText = (editor.somethingSelected() ? editor.getSelection() : wholeText)
@@ -59,7 +68,13 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
     new Notice("Generating flashcards...");
     try {
-      const generatedCards = (await generateFlashcards(currentText, apiKey, model, sep)).split("\n");
+      const generatedCards = (await generateFlashcards(
+        currentText,
+        apiKey,
+        model,
+        sep,
+        flashcardsCount
+      )).split("\n");
       editor.setCursor(editor.lastLine())
 
       let updatedText = "";
@@ -161,6 +176,19 @@ class FlashcardsSettingsTab extends PluginSettingTab {
       })
     );
 
-
+    new Setting(containerEl)
+    .setName("Number of flashcards to generate")
+    .setDesc("Set this to the total number of flashcards the model should "+
+      "generate each time a new `Generate Flashcards` command is issued")
+    .addText((text) =>
+      text
+      .setPlaceholder(3)
+      .setValue(this.plugin.settings.flashcardsCount)
+      .onChange(async (value) => {
+        this.plugin.settings.flashcardsCount = value;
+        await this.plugin.saveSettings();
+      })
+    );
   }
+
 }
