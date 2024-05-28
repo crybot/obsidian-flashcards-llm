@@ -3,5 +3,5 @@ export function availableChatModels(): Array<string> {
 }
 
 export function availableCompletionModels(): Array<string> {
-  return ["text-davinci-003"]
+  return []
 }

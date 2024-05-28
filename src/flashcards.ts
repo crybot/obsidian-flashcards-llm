@@ -28,7 +28,7 @@ function extractTextAfterFlashcards(text: string): string | null {
 export async function generateFlashcards(
   text: string,
   apiKey: string,
-  model: string = "text-davinci-003",
+  model: string = "gpt-4o",
   sep: string = "::",
   flashcardsCount: number = 3,
   additionalInfo: string = "",

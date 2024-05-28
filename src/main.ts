@@ -13,7 +13,7 @@ interface FlashcardsSettings {
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
   apiKey: "",
-  model: "text-davinci-003",
+  model: "gpt-4o",
   inlineSeparator: "::",
   flashcardsCount: 3,
   additionalPrompt: "",
