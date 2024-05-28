@@ -4,6 +4,7 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 
 ## News
 - **New Integration**: The plugin now integrates with the latest OpenAI model, `gpt-4o`.
+- Implemented streaming text generation.
 
 ## Features
 
@@ -30,6 +31,10 @@ Check out this demo to see the plugin in action:
 
 Try Obsidian Flashcards LLM and transform your notes into a structured study tool. Contributions, feedback, and suggestions are always welcome!
 
+## Setup
+Follow this [quickstart guide](https://platform.openai.com/docs/quickstart) to setup your OpenAI api key.
+Then open the settings and paste your key in the `OpenAI API key` field.
+
 ## Usage
 From within any open note you can run one of the following commands:
 - `Generate Inline Flashcards`
@@ -37,8 +42,8 @@ From within any open note you can run one of the following commands:
 which will generate the designated number of flashcards with the required format.
 If visually you select a portion of your note before running the command, the
 model will only use that selection as context, otherwise, the whole text is used.
-Unless you see an error on screen, your flashcards should appear at the end of
-your note soon enough (using `gpt-4` takes some time, I'm working on a status bar).
+Unless you see an error on screen, your flashcards should start appearing in a stream-like fashion
+at the end of your note soon enough.
 Please note that multi-line flashcard generation sometimes does not work. Consider
 using `gpt-4o` or `gpt-4-turbo` for better results.
 
