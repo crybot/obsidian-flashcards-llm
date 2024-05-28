@@ -102,7 +102,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
         updatedText += "#flashcards\n";
       }
 
-      updatedText += "\n\n" + generatedCards.map(s => s.trim()).join('\n\n');
+      updatedText += "\n\n" + generatedCards.map(s => s.trim()).join('\n');
 
       editor.replaceRange(updatedText, editor.getCursor())
 
