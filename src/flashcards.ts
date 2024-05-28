@@ -1,5 +1,7 @@
 import { availableChatModels, availableCompletionModels } from "./models";
 import { OpenAI } from 'openai';
+import { Readable } from "stream";
+
 
 
 // TODO:
@@ -34,6 +36,7 @@ function inlineCardsPrompt(sep: string, flashcardsCount: number): string {
 function multilineCardsPrompt(sep: string, flashcardsCount: number): string {
   return `You will be provided with a note. At the end of the note are some flashcards. Identify which are the most important concepts within the note and generate exactly ${flashcardsCount} new original flashcard in the format \"question<newline>${sep}<newline>answer\", where <newline> is a newline. The question cannot start with special symbols or numbers. Do not add trailing spaces. Separate invidivual flashcards with a single empty line. An example is \"What is chemical formula of water\\n${sep}\\nH2O\". Do not use any prefix text, start generating right away. The flashcards can be as complex as needed, but have to be rich of information and challenging. Do not repeat or rephrase flashcards. Typeset equations and math formulas correctly (that is using the \$ symbol without trailing spaces)`;
 }
+
 
 export async function* generateFlashcards(
   text: string,
@@ -80,10 +83,12 @@ export async function* generateFlashcards(
       }, { timeout: 60000 });
 
     if (!stream) {
+      response = response as OpenAI.ChatCompletion
       response = response?.choices[0]?.message?.content?.trim() ?? null;
       yield response || '';
     }
     else {
+      response = response as AsyncIterable<OpenAI.ChatCompletionChunk>
       for await (const chunk of response) {
         yield chunk.choices[0]?.delta?.content || '';
       }
