@@ -5,6 +5,7 @@ import { availableChatModels, availableCompletionModels } from "./models";
 // TODO:
 // - Status bar
 // - Modal input for custom on the fly settings (prompts/flashcards count, etc.)
+// - Enforce newline separation (stream post processing)
 
 interface FlashcardsSettings {
   apiKey: string;
@@ -14,6 +15,7 @@ interface FlashcardsSettings {
   flashcardsCount: number;
   additionalPrompt: string;
   maxTokens: number;
+  streaming: boolean;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
@@ -23,7 +25,8 @@ const DEFAULT_SETTINGS: FlashcardsSettings = {
   multilineSeparator: "?",
   flashcardsCount: 3,
   additionalPrompt: "",
-  maxTokens: 300
+  maxTokens: 300,
+  streaming: true
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -91,9 +94,10 @@ export default class FlashcardsLLMPlugin extends Plugin {
     const hasTag = tagRegex.test(wholeText);
 
 
+    const streaming = this.settings.streaming
     new Notice("Generating flashcards...");
     try {
-      const generatedCards = (await generateFlashcards(
+      const generatedFlashcards = await generateFlashcards(
         currentText,
         apiKey,
         model,
@@ -101,9 +105,9 @@ export default class FlashcardsLLMPlugin extends Plugin {
         flashcardsCount,
         additionalPrompt,
         maxTokens,
-        multiline
-      )).split("\n");
-      editor.setCursor(editor.lastLine())
+        multiline,
+        streaming
+      )
 
       let updatedText = "";
 
@@ -114,21 +118,19 @@ export default class FlashcardsLLMPlugin extends Plugin {
 
       // Generate and add the #flashcards tag if not already present
       if (!hasTag) {
-        updatedText += "#flashcards\n";
+        updatedText += "#flashcards\n\n";
       }
-
-      updatedText += "\n\n" + generatedCards.map(s => s.trim()).join('\n');
-      console.info(generatedCards)
-
-
+      
+      editor.setCursor(editor.lastLine())
       editor.replaceRange(updatedText, editor.getCursor())
 
-
-      const newPosition: EditorPosition = {
-        ch: 0,
-        line: editor.lastLine()
+      editor.setCursor(editor.lastLine())
+      for await (const text of generatedFlashcards) {
+        editor.replaceRange(text, editor.getCursor())
+        const offset: number = editor.posToOffset(editor.getCursor())
+        const newPosition: EditorPosition = editor.offsetToPos(offset + text.length)
+        editor.setCursor(newPosition)
       }
-      editor.setCursor(newPosition)
       new Notice("Flashcards succesfully generated!");
 
     } catch (error) {
@@ -259,5 +261,16 @@ class FlashcardsSettingsTab extends PluginSettingTab {
       })
     );
 
+    new Setting(containerEl)
+    .setName("Streaming")
+    .setDesc("Enable/Disable streaming text completion")
+    .addToggle((on) => 
+      on
+      .setValue(this.plugin.settings.streaming)
+      .onChange(async (on) => {
+        this.plugin.settings.streaming = on;
+        await this.plugin.saveSettings();
+      })
+    )
   }
 }
