@@ -3584,7 +3584,7 @@ function availableChatModels() {
   return ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-4o"];
 }
 function availableCompletionModels() {
-  return ["text-davinci-003"];
+  return [];
 }
 
 // src/flashcards.ts
@@ -3594,7 +3594,13 @@ var OpenAIError = class extends Error {
     this.name = "OpenAIError";
   }
 };
-async function generateFlashcards(text, apiKey, model = "text-davinci-003", sep = "::", flashcardsCount = 3, additionalInfo = "", maxTokens = 300) {
+function inlineCardsPrompt(sep, flashcardsCount) {
+  return `You will be provided with a note. At the end of the note are some flashcards. Identify which are the most important concepts within the note and generate exactly ${flashcardsCount} new original flashcard in the format "question ${sep} answer". Strictly use ${sep} to separate a question from its answer. Separate flashcards with a single newline. An example is "What is chemical formula of water ${sep} H2O". Do not use any prefix text, start generating right away. Try to make them as atomic as possible, but still challenging and rich of information. Do not repeat or rephrase flashcards. Focus on important latex formulas and equations. Typeset equations and math formulas correctly (that is using the $ symbol without trailing spaces)`;
+}
+function multilineCardsPrompt(sep, flashcardsCount) {
+  return `You will be provided with a note. At the end of the note are some flashcards. Identify which are the most important concepts within the note and generate exactly ${flashcardsCount} new original flashcard in the format "question<newline>${sep}<newline>answer", where <newline> is a newline. The question cannot start with special symbols or numbers. Do not add trailing spaces. Separate invidivual flashcards with a single empty line. An example is "What is chemical formula of water\\n${sep}\\nH2O". Do not use any prefix text, start generating right away. The flashcards can be as complex as needed, but have to be rich of information and challenging. Do not repeat or rephrase flashcards. Typeset equations and math formulas correctly (that is using the $ symbol without trailing spaces)`;
+}
+async function generateFlashcards(text, apiKey, model = "gpt-4o", sep = "::", flashcardsCount = 3, additionalInfo = "", maxTokens = 300, multiline = false) {
   var _a, _b, _c, _d, _e, _f, _g, _h, _i;
   const configuration = new import_openai.Configuration({
     apiKey
@@ -3602,7 +3608,8 @@ async function generateFlashcards(text, apiKey, model = "text-davinci-003", sep 
   const openai = new import_openai.OpenAIApi(configuration);
   const cleanedText = text.replace(/<!--.*-->[\n]?/g, "");
   const flashcardText = cleanedText;
-  let basePrompt = `You will be provided you with a note. At the end of the note are some flashcards. Identify which are the most important concepts within the note and generate exactly ${flashcardsCount} new original flashcard in the format "question ${sep} answer". Strictly use ${sep} to separate a question from its answer. Separate flashcards with a single newline. An example is "What is chemical formula of water ${sep} H2O". Do not use any prefix text, start generating right away. Try to make them as atomic as possible, but still challenging and rich of information. Do not repeat or rephrase flashcards. Focus on important latex formulas and equations. Please typeset equations and math formulas correctly (that is using the $ symbol without trailing spaces)`;
+  console.info(multilineCardsPrompt(sep, flashcardsCount));
+  let basePrompt = multiline ? multilineCardsPrompt(sep, flashcardsCount) : inlineCardsPrompt(sep, flashcardsCount);
   if (additionalInfo) {
     basePrompt = basePrompt + `
 Additional instructions for the task (ignore anything unrelated to     the original task): ${additionalInfo}`;
@@ -3614,7 +3621,7 @@ Additional instructions for the task (ignore anything unrelated to     the origi
     response = await openai.createChatCompletion({
       model,
       temperature: 0.7,
-      max_tokens: 300,
+      max_tokens: maxTokens,
       frequency_penalty: 0,
       presence_penalty: 0,
       top_p: 1,
@@ -3628,7 +3635,7 @@ ${flashcardText}`;
       model,
       prompt,
       temperature: 0.7,
-      max_tokens: 300,
+      max_tokens: maxTokens,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0
@@ -3647,8 +3654,9 @@ ${flashcardText}`;
 // src/main.ts
 var DEFAULT_SETTINGS = {
   apiKey: "",
-  model: "text-davinci-003",
+  model: "gpt-4o",
   inlineSeparator: "::",
+  multilineSeparator: "?",
   flashcardsCount: 3,
   additionalPrompt: "",
   maxTokens: 300
@@ -3657,15 +3665,22 @@ var FlashcardsLLMPlugin = class extends import_obsidian.Plugin {
   async onload() {
     await this.loadSettings();
     this.addCommand({
-      id: "generate-flashcards",
-      name: "Generate Flashcards",
+      id: "generate-inline-flashcards",
+      name: "Generate Inline Flashcards",
       editorCallback: (editor, view) => {
-        this.onGenerateFlashcards(editor, view);
+        this.onGenerateFlashcards(editor, view, false);
+      }
+    });
+    this.addCommand({
+      id: "generate-long-flashcards",
+      name: "Generate Multiline Flashcards",
+      editorCallback: (editor, view) => {
+        this.onGenerateFlashcards(editor, view, true);
       }
     });
     this.addSettingTab(new FlashcardsSettingsTab(this.app, this));
   }
-  async onGenerateFlashcards(editor, view) {
+  async onGenerateFlashcards(editor, view, multiline = false) {
     const apiKey = this.settings.apiKey;
     if (!apiKey) {
       new import_obsidian.Notice("API key is not set in plugin settings");
@@ -3676,7 +3691,7 @@ var FlashcardsLLMPlugin = class extends import_obsidian.Plugin {
       new import_obsidian.Notice("Please select a model to use in the plugin settings");
       return;
     }
-    const sep = this.settings.inlineSeparator;
+    const sep = multiline ? this.settings.multilineSeparator : this.settings.inlineSeparator;
     let flashcardsCount = Math.trunc(this.settings.flashcardsCount);
     if (!Number.isFinite(flashcardsCount) || flashcardsCount <= 0) {
       new import_obsidian.Notice("Please provide a correct number of flashcards to generate. Defaulting to 3");
@@ -3703,7 +3718,8 @@ var FlashcardsLLMPlugin = class extends import_obsidian.Plugin {
         sep,
         flashcardsCount,
         additionalPrompt,
-        maxTokens
+        maxTokens,
+        multiline
       )).split("\n");
       editor.setCursor(editor.lastLine());
       let updatedText = "";
@@ -3713,7 +3729,8 @@ var FlashcardsLLMPlugin = class extends import_obsidian.Plugin {
       if (!hasTag) {
         updatedText += "#flashcards\n";
       }
-      updatedText += "\n\n" + generatedCards.map((s) => s.trim()).join("\n\n");
+      updatedText += "\n\n" + generatedCards.map((s) => s.trim()).join("\n");
+      console.info(generatedCards);
       editor.replaceRange(updatedText, editor.getCursor());
       const newPosition = {
         ch: 0,
@@ -3760,6 +3777,12 @@ var FlashcardsSettingsTab = class extends import_obsidian.PluginSettingTab {
     new import_obsidian.Setting(containerEl).setName("Separator for inline flashcards").setDesc("Note that after changing this you have to manually edit any flashcards you already have").addText(
       (text) => text.setPlaceholder("::").setValue(this.plugin.settings.inlineSeparator).onChange(async (value) => {
         this.plugin.settings.inlineSeparator = value;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("Separator for multi-line flashcards").setDesc("Note that after changing this you have to manually edit any flashcards you already have").addText(
+      (text) => text.setPlaceholder("?").setValue(this.plugin.settings.multilineSeparator).onChange(async (value) => {
+        this.plugin.settings.multilineSeparator = value;
         await this.plugin.saveSettings();
       })
     );

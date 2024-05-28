@@ -2,10 +2,15 @@ import { App, Editor, EditorPosition, MarkdownView, Modal, Notice, Plugin, Plugi
 import { generateFlashcards } from "./flashcards";
 import { availableChatModels, availableCompletionModels } from "./models";
 
+// TODO:
+// - Status bar
+// - Modal input for custom on the fly settings (prompts/flashcards count, etc.)
+
 interface FlashcardsSettings {
   apiKey: string;
   model: string;
   inlineSeparator: string;
+  multilineSeparator: string;
   flashcardsCount: number;
   additionalPrompt: string;
   maxTokens: number;
@@ -15,6 +20,7 @@ const DEFAULT_SETTINGS: FlashcardsSettings = {
   apiKey: "",
   model: "gpt-4o",
   inlineSeparator: "::",
+  multilineSeparator: "?",
   flashcardsCount: 3,
   additionalPrompt: "",
   maxTokens: 300
@@ -27,10 +33,18 @@ export default class FlashcardsLLMPlugin extends Plugin {
     await this.loadSettings();
 
     this.addCommand({
-      id: "generate-flashcards",
-      name: "Generate Flashcards",
+      id: "generate-inline-flashcards",
+      name: "Generate Inline Flashcards",
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        this.onGenerateFlashcards(editor, view);
+        this.onGenerateFlashcards(editor, view, false);
+      },
+    });
+
+    this.addCommand({
+      id: "generate-long-flashcards",
+      name: "Generate Multiline Flashcards",
+      editorCallback: (editor: Editor, view: MarkdownView) => {
+        this.onGenerateFlashcards(editor, view, true);
       },
     });
 
@@ -38,7 +52,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
     this.addSettingTab(new FlashcardsSettingsTab(this.app, this));
   }
 
-  async onGenerateFlashcards(editor: Editor, view: MarkdownView) {
+  async onGenerateFlashcards(editor: Editor, view: MarkdownView, multiline: boolean = false) {
     const apiKey = this.settings.apiKey;
     if (!apiKey) {
       new Notice("API key is not set in plugin settings");
@@ -50,7 +64,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
       return;
     }
 
-    const sep = this.settings.inlineSeparator
+    const sep = multiline ? this.settings.multilineSeparator : this.settings.inlineSeparator
 
     let flashcardsCount = Math.trunc(this.settings.flashcardsCount)
     if (!Number.isFinite(flashcardsCount) || flashcardsCount <= 0) {
@@ -86,7 +100,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
         sep,
         flashcardsCount,
         additionalPrompt,
-        maxTokens
+        maxTokens,
+        multiline
       )).split("\n");
       editor.setCursor(editor.lastLine())
 
@@ -103,6 +118,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
       }
 
       updatedText += "\n\n" + generatedCards.map(s => s.trim()).join('\n');
+      console.info(generatedCards)
+
 
       editor.replaceRange(updatedText, editor.getCursor())
 
@@ -186,6 +203,18 @@ class FlashcardsSettingsTab extends PluginSettingTab {
       .setValue(this.plugin.settings.inlineSeparator)
       .onChange(async (value) => {
         this.plugin.settings.inlineSeparator = value;
+        await this.plugin.saveSettings();
+      })
+    );
+    new Setting(containerEl)
+    .setName("Separator for multi-line flashcards")
+    .setDesc("Note that after changing this you have to manually edit any flashcards you already have")
+    .addText((text) =>
+      text
+      .setPlaceholder("?")
+      .setValue(this.plugin.settings.multilineSeparator)
+      .onChange(async (value) => {
+        this.plugin.settings.multilineSeparator = value;
         await this.plugin.saveSettings();
       })
     );
