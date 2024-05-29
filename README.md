@@ -5,12 +5,13 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 ## News
 - **New Integration**: The plugin now integrates with the latest OpenAI model, `gpt-4o`.
 - Implemented streaming text generation.
+- You can now hide flashcards in preview mode.
 
 ## Features
 
 ### Integration with OpenAI
 - **Multiple Models**: Supports `gpt-3.5-turbo`, `gpt-4`, `gpt-4-turbo`, and `gpt-4o`. Configure your OpenAI API key in the plugin settings and select the desired model.
-- **Flashcard Generation**: Generate flashcards from any open note using the `Generate Flashcards` command. The flashcards are appended to your note under a new markdown header.
+- **Flashcard Generation**: Generate flashcards from any open note using the `Generate Flashcards` command. The flashcards are appended to your note within a blockquote.
 
 ### Customization Options
 - **Selective Content Generation**: Choose to generate flashcards from a specific selection of your note or the entire note.
@@ -18,6 +19,7 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 - **Inline Flashcards**: Customize the separator used for generating inline flashcards to match your preferred format.
 - **Multi-line Flashcards**: Provide the separator used for generating multi-line flashcards.
 - **Max output tokens**: Set the maximum number of tokens the model can output to preserve your budget.
+- **Hide flashcards in preview mode**: Toggle this setting to hide the generated flashcards during preview.
 
 ### Future Plans
 - **Expanded Flashcard Types**: Upcoming updates will support reversed flashcards, automatic deck creation and additional customization options.

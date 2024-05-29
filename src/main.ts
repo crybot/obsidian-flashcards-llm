@@ -6,6 +6,10 @@ import { availableChatModels, availableCompletionModels } from "./models";
 // - Status bar
 // - Modal input for custom on the fly settings (prompts/flashcards count, etc.)
 // - Enforce newline separation (stream post processing)
+// - Always append flashcards at the end of the file (ch:0, line: last)
+// - Disable user input while generating
+// - Custom tag for flashcards blocks
+// - Insert an optional header before flashcards
 
 interface FlashcardsSettings {
   apiKey: string;
@@ -16,6 +20,7 @@ interface FlashcardsSettings {
   additionalPrompt: string;
   maxTokens: number;
   streaming: boolean;
+  hideInPreview: boolean;
 }
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
@@ -26,7 +31,8 @@ const DEFAULT_SETTINGS: FlashcardsSettings = {
   flashcardsCount: 3,
   additionalPrompt: "",
   maxTokens: 300,
-  streaming: true
+  streaming: true,
+  hideInPreview: true
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -51,11 +57,32 @@ export default class FlashcardsLLMPlugin extends Plugin {
       },
     });
 
+    this.registerMarkdownPostProcessor((element, context) => {
+
+      if(!this.settings.hideInPreview) {
+        return;
+      }
+
+      const blocks = element.findAll("blockquote");
+
+      for(let block of blocks) {
+        const anchors = Array.from(block.querySelectorAll("a"));
+        if (anchors.some((a) => a.getAttribute("href")?.startsWith("#flashcards"))) {
+          block.style.display = 'none'
+        }
+      }
+    });
+
+
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new FlashcardsSettingsTab(this.app, this));
   }
 
   async onGenerateFlashcards(editor: Editor, view: MarkdownView, multiline: boolean = false) {
+    console.log(editor)
+    console.log(view)
+
+    console.log(view.previewMode)
     const apiKey = this.settings.apiKey;
     if (!apiKey) {
       new Notice("API key is not set in plugin settings");
@@ -112,20 +139,22 @@ export default class FlashcardsLLMPlugin extends Plugin {
       let updatedText = "";
 
       // Generate and add the header if not already present
-      if (!hasHeader) {
-        updatedText += "\n\n### Generated Flashcards\n";
-      }
+      // if (!hasHeader) {
+      //   updatedText += "\n\n### Generated Flashcards\n";
+      // }
 
       // Generate and add the #flashcards tag if not already present
-      if (!hasTag) {
-        updatedText += "#flashcards\n\n";
-      }
+      // if (!hasTag) {
+      //   updatedText += "> #flashcards\n> \n> ";
+      // }
+      updatedText += "\n\n> #flashcards\n> \n> ";
       
       editor.setCursor(editor.lastLine())
       editor.replaceRange(updatedText, editor.getCursor())
 
       editor.setCursor(editor.lastLine())
-      for await (const text of generatedFlashcards) {
+      for await (let text of generatedFlashcards) {
+        text = text.replace(/\n/g, "\n> ")
         editor.replaceRange(text, editor.getCursor())
         const offset: number = editor.posToOffset(editor.getCursor())
         const newPosition: EditorPosition = editor.offsetToPos(offset + text.length)
@@ -271,6 +300,26 @@ class FlashcardsSettingsTab extends PluginSettingTab {
         this.plugin.settings.streaming = on;
         await this.plugin.saveSettings();
       })
-    )
+    );
+
+    new Setting(containerEl)
+    .setName("Hide flashcards in preview mode")
+    .setDesc("If enabled, you won't see flashcards when in preview mode, "
+      + "but you will still be able to edit them")
+    .addToggle((on) => 
+      on
+      .setValue(this.plugin.settings.hideInPreview)
+      .onChange(async (on) => {
+        this.plugin.settings.hideInPreview = on;
+
+        await this.plugin.saveSettings();
+
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (view) {
+          view.previewMode.rerender(true);
+        }
+      })
+    );
+
   }
 }

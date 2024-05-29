@@ -4447,7 +4447,8 @@ var DEFAULT_SETTINGS = {
   flashcardsCount: 3,
   additionalPrompt: "",
   maxTokens: 300,
-  streaming: true
+  streaming: true,
+  hideInPreview: true
 };
 var FlashcardsLLMPlugin = class extends import_obsidian.Plugin {
   async onload() {
@@ -4466,9 +4467,27 @@ var FlashcardsLLMPlugin = class extends import_obsidian.Plugin {
         this.onGenerateFlashcards(editor, view, true);
       }
     });
+    this.registerMarkdownPostProcessor((element, context) => {
+      if (!this.settings.hideInPreview) {
+        return;
+      }
+      const blocks = element.findAll("blockquote");
+      for (let block of blocks) {
+        const anchors = Array.from(block.querySelectorAll("a"));
+        if (anchors.some((a) => {
+          var _a2;
+          return (_a2 = a.getAttribute("href")) == null ? void 0 : _a2.startsWith("#flashcards");
+        })) {
+          block.style.display = "none";
+        }
+      }
+    });
     this.addSettingTab(new FlashcardsSettingsTab(this.app, this));
   }
   async onGenerateFlashcards(editor, view, multiline = false) {
+    console.log(editor);
+    console.log(view);
+    console.log(view.previewMode);
     const apiKey = this.settings.apiKey;
     if (!apiKey) {
       new import_obsidian.Notice("API key is not set in plugin settings");
@@ -4512,16 +4531,12 @@ var FlashcardsLLMPlugin = class extends import_obsidian.Plugin {
         streaming
       );
       let updatedText = "";
-      if (!hasHeader) {
-        updatedText += "\n\n### Generated Flashcards\n";
-      }
-      if (!hasTag) {
-        updatedText += "#flashcards\n\n";
-      }
+      updatedText += "\n\n> #flashcards\n> \n> ";
       editor.setCursor(editor.lastLine());
       editor.replaceRange(updatedText, editor.getCursor());
       editor.setCursor(editor.lastLine());
-      for await (const text of generatedFlashcards) {
+      for await (let text of generatedFlashcards) {
+        text = text.replace(/\n/g, "\n> ");
         editor.replaceRange(text, editor.getCursor());
         const offset = editor.posToOffset(editor.getCursor());
         const newPosition = editor.offsetToPos(offset + text.length);
@@ -4598,6 +4613,16 @@ var FlashcardsSettingsTab = class extends import_obsidian.PluginSettingTab {
       (on) => on.setValue(this.plugin.settings.streaming).onChange(async (on2) => {
         this.plugin.settings.streaming = on2;
         await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("Hide flashcards in preview mode").setDesc("If enabled, you won't see flashcards when in preview mode, but you will still be able to edit them").addToggle(
+      (on) => on.setValue(this.plugin.settings.hideInPreview).onChange(async (on2) => {
+        this.plugin.settings.hideInPreview = on2;
+        await this.plugin.saveSettings();
+        const view = this.app.workspace.getActiveViewOfType(import_obsidian.MarkdownView);
+        if (view) {
+          view.previewMode.rerender(true);
+        }
       })
     );
   }
