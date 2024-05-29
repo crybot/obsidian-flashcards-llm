@@ -20,6 +20,8 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 - **Multi-line Flashcards**: Provide the separator used for generating multi-line flashcards.
 - **Max output tokens**: Set the maximum number of tokens the model can output to preserve your budget.
 - **Hide flashcards in preview mode**: Toggle this setting to hide the generated flashcards during preview.
+	If this is on, set `Save scheduling comment on the same line as the flashcard's last line` to on in
+	the Spaced Repetition plugin as well, in order not to break the blockquote formatting.
 
 ### Future Plans
 - **Expanded Flashcard Types**: Upcoming updates will support reversed flashcards, automatic deck creation and additional customization options.
