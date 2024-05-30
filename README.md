@@ -11,7 +11,7 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 
 ### Integration with OpenAI
 - **Multiple Models**: Supports `gpt-3.5-turbo`, `gpt-4`, `gpt-4-turbo`, and `gpt-4o`. Configure your OpenAI API key in the plugin settings and select the desired model.
-- **Flashcard Generation**: Generate flashcards from any open note using the `Generate Flashcards` command. The flashcards are appended to your note within a blockquote.
+- **Flashcard Generation**: Generate flashcards from any open note using the available commands. The flashcards are appended to your note within a blockquote.
 
 ### Customization Options
 - **Selective Content Generation**: Choose to generate flashcards from a specific selection of your note or the entire note.
@@ -22,6 +22,7 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 - **Hide flashcards in preview mode**: Toggle this setting to hide the generated flashcards during preview.
 	If this is on, set `Save scheduling comment on the same line as the flashcard's last line` to on in
 	the Spaced Repetition plugin as well, in order not to break the blockquote formatting.
+- **Change settings on the fly**: You can change settings on a per-command basis by running the `Generate flashcards with new settings` command
 
 ### Future Plans
 - **Expanded Flashcard Types**: Upcoming updates will support reversed flashcards, automatic deck creation and additional customization options.
@@ -50,6 +51,9 @@ Unless you see an error on screen, your flashcards should start appearing in a s
 at the end of your note soon enough.
 Please note that multi-line flashcard generation sometimes does not work. Consider
 using `gpt-4o` or `gpt-4-turbo` for better results.
+You can also execute the command `Generate flashcards with new settings` which lets
+you transiantly customize the settings on the fly by specifying a custom prompt,
+the number of flashcards to generate and whether they have to be multiline.
 
 
 ## Tips

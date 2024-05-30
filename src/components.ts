@@ -7,6 +7,7 @@ export class InputModal extends Modal {
   plugin: FlashcardsLLMPlugin
   configuration: FlashcardsSettings;
   multiline: boolean;
+  keypressed: boolean;
   onSubmit: (configuration: FlashcardsSettings, multiline: boolean) => void;
 
   constructor(app: App, plugin: FlashcardsLLMPlugin, onSubmit: (configuration: FlashcardsSettings, multiline: boolean) => void) {
@@ -14,10 +15,11 @@ export class InputModal extends Modal {
     this.plugin = plugin;
     this.onSubmit = onSubmit;
     this.configuration = { ...this.plugin.settings };
+    this.keypressed = false;
   }
 
   onOpen() {
-    let {  contentEl } = this;
+    let {  contentEl, containerEl, modalEl } = this;
     contentEl.createEl("h1", { text: "Prompt configuration" });
 
     new Setting(contentEl)
@@ -57,11 +59,29 @@ export class InputModal extends Modal {
         .setButtonText("Submit")
         .setCta()
         .onClick(() => {
-          this.close();
-          this.onSubmit(this.configuration, this.multiline);
+          this.submit();
         })
       );
 
+    contentEl.addEventListener("keyup", ({key}) => {
+      if (key === "Enter") {
+        // Hack to make the keypress work reliably:
+        // without this (for example) it registers the KEYUP event from
+        // when the user issued the command from the command palette
+        if (this.keypressed) {
+          this.submit();
+        }
+        else {
+          this.keypressed = true;
+        }
+      }
+    });
+
+  }
+  
+  submit() {
+    this.close();
+    this.onSubmit(this.configuration, this.multiline);
   }
 
   onClose() {

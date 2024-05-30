@@ -4446,9 +4446,10 @@ var InputModal = class extends import_obsidian.Modal {
     this.plugin = plugin;
     this.onSubmit = onSubmit;
     this.configuration = { ...this.plugin.settings };
+    this.keypressed = false;
   }
   onOpen() {
-    let { contentEl } = this;
+    let { contentEl, containerEl, modalEl } = this;
     contentEl.createEl("h1", { text: "Prompt configuration" });
     new import_obsidian.Setting(contentEl).setName("Number of flashcards to generate").addText(
       (text) => text.setValue(this.configuration.flashcardsCount.toString()).onChange((value) => {
@@ -4467,10 +4468,22 @@ var InputModal = class extends import_obsidian.Modal {
     );
     new import_obsidian.Setting(contentEl).addButton(
       (btn) => btn.setButtonText("Submit").setCta().onClick(() => {
-        this.close();
-        this.onSubmit(this.configuration, this.multiline);
+        this.submit();
       })
     );
+    contentEl.addEventListener("keyup", ({ key }) => {
+      if (key === "Enter") {
+        if (this.keypressed) {
+          this.submit();
+        } else {
+          this.keypressed = true;
+        }
+      }
+    });
+  }
+  submit() {
+    this.close();
+    this.onSubmit(this.configuration, this.multiline);
   }
   onClose() {
     let { contentEl } = this;
