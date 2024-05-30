@@ -6,6 +6,7 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 - **New Integration**: The plugin now integrates with the latest OpenAI model, `gpt-4o`.
 - Implemented streaming text generation.
 - You can now hide flashcards in preview mode.
+- You can now change settings on the fly (See [Demo](#demo))
 
 ## Features
 
@@ -33,6 +34,11 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 ## Demo
 Check out this demo to see the plugin in action:
 ![Flashcards Demo](https://github.com/crybot/obsidian-flashcards-llm/blob/master/docs/flashcards.gif)
+
+---
+
+You can also specify new settings on the fly with the `Generate flashcards with new settings` command:
+![Flashcards Interactive Demo](https://github.com/crybot/obsidian-flashcards-llm/blob/master/docs/flashcards-interactive.gif)
 
 Try Obsidian Flashcards LLM and transform your notes into a structured study tool. Contributions, feedback, and suggestions are always welcome!
 
