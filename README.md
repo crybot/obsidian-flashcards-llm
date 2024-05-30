@@ -57,7 +57,7 @@ Unless you see an error on screen, your flashcards should start appearing in a s
 at the end of your note soon enough.
 Please note that multi-line flashcard generation sometimes does not work. Consider
 using `gpt-4o` or `gpt-4-turbo` for better results.
-You can also execute the command `Generate flashcards with new settings` which lets
+- You can also execute the command `Generate flashcards with new settings` which lets
 you transiantly customize the settings on the fly by specifying a custom prompt,
 the number of flashcards to generate and whether they have to be multiline.
 
