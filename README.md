@@ -1,4 +1,5 @@
 # Obsidian Flashcards LLM
+![Downloads](https://img.shields.io/github/downloads/crybot/obsidian-flashcards-llm/total?style=for-the-badge)
 
 This plugin integrates Large Language Models with Obsidian to help you generate flashcards from your notes. By leveraging OpenAI's models, such as GPT-3.5 and GPT-4, you can streamline your study process directly within Obsidian.
 
