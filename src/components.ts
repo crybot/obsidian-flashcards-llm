@@ -1,8 +1,10 @@
 import { App, Modal, Setting } from "obsidian"
 import { FlashcardsSettings } from "./settings"
+import FlashcardsLLMPlugin from "./main"
 
 
 export class InputModal extends Modal {
+  plugin: FlashcardsLLMPlugin
   configuration: FlashcardsSettings;
   multiline: boolean;
   onSubmit: (configuration: FlashcardsSettings, multiline: boolean) => void;

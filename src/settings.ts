@@ -1,5 +1,6 @@
 import { App, MarkdownView, PluginSettingTab, Setting } from 'obsidian';
 import { availableChatModels, availableCompletionModels } from "./models";
+import FlashcardsLLMPlugin from "./main"
 
 export interface FlashcardsSettings {
   apiKey: string;
