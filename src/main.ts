@@ -1,27 +1,16 @@
 import { App, Editor, EditorPosition, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { generateFlashcards } from "./flashcards";
 import { availableChatModels, availableCompletionModels } from "./models";
+import { InputModal } from "./components"
+import { FlashcardsSettings, FlashcardsSettingsTab } from "./settings"
 
 // TODO:
 // - Status bar
-// - Modal input for custom on the fly settings (prompts/flashcards count, etc.)
 // - Enforce newline separation (stream post processing)
 // - Always append flashcards at the end of the file (ch:0, line: last)
 // - Disable user input while generating
 // - Custom tag for flashcards blocks
 // - Insert an optional header before flashcards
-
-interface FlashcardsSettings {
-  apiKey: string;
-  model: string;
-  inlineSeparator: string;
-  multilineSeparator: string;
-  flashcardsCount: number;
-  additionalPrompt: string;
-  maxTokens: number;
-  streaming: boolean;
-  hideInPreview: boolean;
-}
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
   apiKey: "",
@@ -45,7 +34,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
       id: "generate-inline-flashcards",
       name: "Generate Inline Flashcards",
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        this.onGenerateFlashcards(editor, view, false);
+        this.onGenerateFlashcards(editor, view, this.settings, false);
       },
     });
 
@@ -53,7 +42,19 @@ export default class FlashcardsLLMPlugin extends Plugin {
       id: "generate-long-flashcards",
       name: "Generate Multiline Flashcards",
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        this.onGenerateFlashcards(editor, view, true);
+        this.onGenerateFlashcards(editor, view, this.settings, true);
+      },
+    });
+
+    this.addCommand({
+      id: "generate-flashcards-interactive",
+      name: "Generate flashcards with new settings",
+      editorCallback: (editor: Editor, view: MarkdownView) => {
+
+        new InputModal(this.app, this, (configuration: FlashcardsSettings, multiline: boolean) => {
+          this.onGenerateFlashcards(editor, view, configuration, multiline);
+        }).open();
+
       },
     });
 
@@ -78,33 +79,29 @@ export default class FlashcardsLLMPlugin extends Plugin {
     this.addSettingTab(new FlashcardsSettingsTab(this.app, this));
   }
 
-  async onGenerateFlashcards(editor: Editor, view: MarkdownView, multiline: boolean = false) {
-    console.log(editor)
-    console.log(view)
-
-    console.log(view.previewMode)
-    const apiKey = this.settings.apiKey;
+  async onGenerateFlashcards(editor: Editor, view: MarkdownView, configuration: FlashcardsSettings, multiline: boolean = false) {
+    const apiKey = configuration.apiKey;
     if (!apiKey) {
       new Notice("API key is not set in plugin settings");
       return;
     }
-    const model = this.settings.model;
+    const model = configuration.model;
     if (!model) {
       new Notice("Please select a model to use in the plugin settings");
       return;
     }
 
-    const sep = multiline ? this.settings.multilineSeparator : this.settings.inlineSeparator
+    const sep = multiline ? configuration.multilineSeparator : configuration.inlineSeparator
 
-    let flashcardsCount = Math.trunc(this.settings.flashcardsCount)
+    let flashcardsCount = Math.trunc(configuration.flashcardsCount)
     if (!Number.isFinite(flashcardsCount) || flashcardsCount <= 0) {
       new Notice("Please provide a correct number of flashcards to generate. Defaulting to 3")
       flashcardsCount = 3
     }
 
-    const additionalPrompt = this.settings.additionalPrompt
+    let additionalPrompt = configuration.additionalPrompt
 
-    let maxTokens = Math.trunc(this.settings.maxTokens)
+    let maxTokens = Math.trunc(configuration.maxTokens)
     if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
       new Notice("Please provide a correct number of maximum tokens to generate. Defaulting to 300")
       maxTokens = 300
@@ -121,8 +118,11 @@ export default class FlashcardsLLMPlugin extends Plugin {
     const hasTag = tagRegex.test(wholeText);
 
 
-    const streaming = this.settings.streaming
+    const streaming = configuration.streaming
     new Notice("Generating flashcards...");
+
+    await flashcardsCount
+
     try {
       const generatedFlashcards = await generateFlashcards(
         currentText,
@@ -181,145 +181,3 @@ export default class FlashcardsLLMPlugin extends Plugin {
   }
 }
 
-class FlashcardsSettingsTab extends PluginSettingTab {
-  plugin: FlashcardsLLMPlugin;
-
-  constructor(app: App, plugin: FlashcardsLLMPlugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-
-  display(): void {
-    const { containerEl } = this;
-
-    containerEl.empty();
-
-    containerEl.createEl("h3", {text: "Model settings"})
-
-    new Setting(containerEl)
-    .setName("OpenAI API key")
-    .setDesc("Enter your OpenAI API key")
-    .addText((text) =>
-      text
-      .setPlaceholder("API key")
-      .setValue(this.plugin.settings.apiKey)
-      .onChange(async (value) => {
-        this.plugin.settings.apiKey = value;
-        await this.plugin.saveSettings();
-      })
-    );
-
-    new Setting(containerEl)
-    .setName("Model")
-    .setDesc("Which language model to use")
-    .addDropdown((dropdown) =>
-      dropdown
-      .addOptions(Object.fromEntries(availableCompletionModels().map(k => [k, k])))
-      .addOptions(Object.fromEntries(availableChatModels().map(k => [k, k])))
-      .setValue(this.plugin.settings.model)
-      .onChange(async (value) => {
-        this.plugin.settings.model = value;
-        await this.plugin.saveSettings();
-      })
-    );
-
-    containerEl.createEl("h3", {text: "Preferences"})
-
-    new Setting(containerEl)
-    .setName("Separator for inline flashcards")
-    .setDesc("Note that after changing this you have to manually edit any flashcards you already have")
-    .addText((text) =>
-      text
-      .setPlaceholder("::")
-      .setValue(this.plugin.settings.inlineSeparator)
-      .onChange(async (value) => {
-        this.plugin.settings.inlineSeparator = value;
-        await this.plugin.saveSettings();
-      })
-    );
-    new Setting(containerEl)
-    .setName("Separator for multi-line flashcards")
-    .setDesc("Note that after changing this you have to manually edit any flashcards you already have")
-    .addText((text) =>
-      text
-      .setPlaceholder("?")
-      .setValue(this.plugin.settings.multilineSeparator)
-      .onChange(async (value) => {
-        this.plugin.settings.multilineSeparator = value;
-        await this.plugin.saveSettings();
-      })
-    );
-
-    new Setting(containerEl)
-    .setName("Number of flashcards to generate")
-    .setDesc("Set this to the total number of flashcards the model should "+
-      "generate each time a new `Generate Flashcards` command is issued")
-    .addText((text) =>
-      text
-      .setPlaceholder("3")
-      .setValue(this.plugin.settings.flashcardsCount.toString())
-      .onChange(async (value) => {
-        this.plugin.settings.flashcardsCount = Number(value);
-        await this.plugin.saveSettings();
-      })
-    );
-
-    new Setting(containerEl)
-    .setName("Additional prompt")
-    .setDesc("Provide additional instructions to the language model")
-    .addText((text) =>
-      text
-      .setPlaceholder("Additional instructions")
-      .setValue(this.plugin.settings.additionalPrompt)
-      .onChange(async (value) => {
-        this.plugin.settings.additionalPrompt = value;
-        await this.plugin.saveSettings();
-      })
-    );
-
-    new Setting(containerEl)
-    .setName("Maximum output tokens")
-    .setDesc("Set this to the total number of tokens the model can generate")
-    .addText((text) =>
-      text
-      .setPlaceholder("300")
-      .setValue(this.plugin.settings.maxTokens.toString())
-      .onChange(async (value) => {
-        this.plugin.settings.maxTokens = Number(value);
-        await this.plugin.saveSettings();
-      })
-    );
-
-    new Setting(containerEl)
-    .setName("Streaming")
-    .setDesc("Enable/Disable streaming text completion")
-    .addToggle((on) => 
-      on
-      .setValue(this.plugin.settings.streaming)
-      .onChange(async (on) => {
-        this.plugin.settings.streaming = on;
-        await this.plugin.saveSettings();
-      })
-    );
-
-    new Setting(containerEl)
-    .setName("Hide flashcards in preview mode")
-    .setDesc("If enabled, you won't see flashcards when in preview mode, "
-      + "but you will still be able to edit them")
-    .addToggle((on) => 
-      on
-      .setValue(this.plugin.settings.hideInPreview)
-      .onChange(async (on) => {
-        this.plugin.settings.hideInPreview = on;
-
-        await this.plugin.saveSettings();
-
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (view) {
-          view.previewMode.rerender(true);
-        }
-      })
-    );
-
-  }
-}
