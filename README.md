@@ -20,6 +20,7 @@ This plugin integrates Large Language Models with Obsidian to help you generate 
 - **Custom Prompts and Quantity**: Provide specific prompts and determine the number of flashcards to generate.
 - **Inline Flashcards**: Customize the separator used for generating inline flashcards to match your preferred format.
 - **Multi-line Flashcards**: Provide the separator used for generating multi-line flashcards.
+- **Flashcards tag**: Choose which tag to append to the generated flashcards for managing your decks.
 - **Max output tokens**: Set the maximum number of tokens the model can output to preserve your budget.
 - **Hide flashcards in preview mode**: Toggle this setting to hide the generated flashcards during preview.
 	If this is on, set `Save scheduling comment on the same line as the flashcard's last line` to on in
