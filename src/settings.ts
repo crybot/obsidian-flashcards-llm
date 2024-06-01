@@ -116,7 +116,6 @@ export class FlashcardsSettingsTab extends PluginSettingTab {
       })
     );
 
-
     new Setting(containerEl)
     .setName("Additional prompt")
     .setDesc("Provide additional instructions to the language model")

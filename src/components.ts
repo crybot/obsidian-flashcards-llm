@@ -1,7 +1,11 @@
 import { App, Modal, Setting } from "obsidian"
 import { FlashcardsSettings } from "./settings"
 import FlashcardsLLMPlugin from "./main"
+import { availableCompletionModels, availableChatModels } from "./models"
 
+
+// TODO:
+// - sticky settings
 
 export class InputModal extends Modal {
   plugin: FlashcardsLLMPlugin
@@ -21,6 +25,18 @@ export class InputModal extends Modal {
   onOpen() {
     let {  contentEl, containerEl, modalEl } = this;
     contentEl.createEl("h1", { text: "Prompt configuration" });
+
+    new Setting(contentEl)
+    .setName("Model")
+    .addDropdown((dropdown) =>
+      dropdown
+      .addOptions(Object.fromEntries(availableCompletionModels().map(k => [k, k])))
+      .addOptions(Object.fromEntries(availableChatModels().map(k => [k, k])))
+      .setValue(this.configuration.model)
+      .onChange(async (value) => {
+        this.configuration.model = value
+      })
+    );
 
     new Setting(contentEl)
     .setName("Number of flashcards to generate")
