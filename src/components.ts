@@ -34,6 +34,17 @@ export class InputModal extends Modal {
     );
 
     new Setting(contentEl)
+    .setName("Flashcards tag")
+    .addText((text) =>
+      text
+      .setPlaceholder("#flashcards")
+      .setValue(this.plugin.settings.tag)
+      .onChange(async (value) => {
+        this.configuration.tag = value
+      })
+    );
+
+    new Setting(contentEl)
     .setName("Additional prompt")
     .addText((text) =>
       text

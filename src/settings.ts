@@ -2,6 +2,9 @@ import { App, MarkdownView, PluginSettingTab, Setting } from 'obsidian';
 import { availableChatModels, availableCompletionModels } from "./models";
 import FlashcardsLLMPlugin from "./main"
 
+// TODO:
+// - make additional prompt a resizable textarea
+
 export interface FlashcardsSettings {
   apiKey: string;
   model: string;
@@ -12,6 +15,7 @@ export interface FlashcardsSettings {
   maxTokens: number;
   streaming: boolean;
   hideInPreview: boolean;
+  tag: string;
 }
 
 
@@ -85,6 +89,20 @@ export class FlashcardsSettingsTab extends PluginSettingTab {
     );
 
     new Setting(containerEl)
+    .setName("Flashcards tag")
+    .setDesc("Set which tag to append upon flashcards generation. " +
+      "See the Spaced Repetition plugin for details")
+    .addText((text) =>
+      text
+      .setPlaceholder("#flashcards")
+      .setValue(this.plugin.settings.tag)
+      .onChange(async (value) => {
+        this.plugin.settings.tag = value;
+        await this.plugin.saveSettings();
+      })
+    );
+
+    new Setting(containerEl)
     .setName("Number of flashcards to generate")
     .setDesc("Set this to the total number of flashcards the model should "+
       "generate each time a new `Generate Flashcards` command is issued")
@@ -97,6 +115,7 @@ export class FlashcardsSettingsTab extends PluginSettingTab {
         await this.plugin.saveSettings();
       })
     );
+
 
     new Setting(containerEl)
     .setName("Additional prompt")

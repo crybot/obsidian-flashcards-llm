@@ -7,7 +7,6 @@ import { FlashcardsSettings, FlashcardsSettingsTab } from "./settings"
 // TODO:
 // - Status bar
 // - Enforce newline separation (stream post processing)
-// - Always append flashcards at the end of the file (ch:0, line: last)
 // - Disable user input while generating
 // - Custom tag for flashcards blocks
 // - Insert an optional header before flashcards
@@ -21,7 +20,8 @@ const DEFAULT_SETTINGS: FlashcardsSettings = {
   additionalPrompt: "",
   maxTokens: 300,
   streaming: true,
-  hideInPreview: true
+  hideInPreview: true,
+  tag: "#flashcards"
 };
 
 export default class FlashcardsLLMPlugin extends Plugin {
@@ -65,10 +65,11 @@ export default class FlashcardsLLMPlugin extends Plugin {
       }
 
       const blocks = element.findAll("blockquote");
+      const tag = this.settings.tag;
 
       for(let block of blocks) {
         const anchors = Array.from(block.querySelectorAll("a"));
-        if (anchors.some((a) => a.getAttribute("href")?.startsWith("#flashcards"))) {
+        if (anchors.some((a) => a.getAttribute("href")?.startsWith(`${tag}`))) {
           block.style.display = 'none'
         }
       }
@@ -107,6 +108,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
       maxTokens = 300
     }
 
+    const tag = configuration.tag;
+
     const wholeText = editor.getValue()
     const currentText = (editor.somethingSelected() ? editor.getSelection() : wholeText)
     // Check if the header is already present
@@ -114,8 +117,8 @@ export default class FlashcardsLLMPlugin extends Plugin {
     const hasHeader = headerRegex.test(wholeText);
 
     // Check if the #flashcards tag is already present
-    const tagRegex = /\n#flashcards.*\n/;
-    const hasTag = tagRegex.test(wholeText);
+    // const tagRegex = /\n#flashcards.*\n/;
+    // const hasTag = tagRegex.test(wholeText);
 
 
     const streaming = configuration.streaming
@@ -147,7 +150,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
       // if (!hasTag) {
       //   updatedText += "> #flashcards\n> \n> ";
       // }
-      updatedText += "\n\n> #flashcards\n> \n> ";
+      updatedText += `\n\n> ${tag}\n> \n> `;
       
       editor.setCursor(editor.lastLine())
       editor.replaceRange(updatedText, editor.getCursor())
