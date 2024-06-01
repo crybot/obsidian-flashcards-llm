@@ -8,7 +8,6 @@ import { FlashcardsSettings, FlashcardsSettingsTab } from "./settings"
 // - Status bar
 // - Enforce newline separation (stream post processing)
 // - Disable user input while generating
-// - Custom tag for flashcards blocks
 // - Insert an optional header before flashcards
 
 const DEFAULT_SETTINGS: FlashcardsSettings = {
