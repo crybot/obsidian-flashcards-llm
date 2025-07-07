@@ -4,15 +4,16 @@
 This plugin integrates Large Language Models with Obsidian to help you generate flashcards from your notes. By leveraging OpenAI's models, such as GPT-3.5 and GPT-4, you can streamline your study process directly within Obsidian.
 
 ## News
-- **New Integration**: The plugin now integrates with the latest OpenAI model, `gpt-4o`.
-- Implemented streaming text generation.
-- You can now hide flashcards in preview mode.
-- You can now change settings on the fly (See [Demo](#demo))
+- **New Integration**: The plugin now integrates with the following new models:
+`gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano` 
+- **New Integration**: Support for the following reasoning models has been added:
+`o1`, `o1-mini`, `o3-mini`, `o4-mini` 
+- You can change reasoning effort for reasoning models in the settings (low, medium, high)
 
 ## Features
 
 ### Integration with OpenAI
-- **Multiple Models**: Supports `gpt-3.5-turbo`, `gpt-4`, `gpt-4-turbo`, and `gpt-4o`. Configure your OpenAI API key in the plugin settings and select the desired model.
+- **Multiple Models**: Supports most OpenAI completion models, including reasoning ones. Configure your OpenAI API key in the plugin settings and select the desired model.
 - **Flashcard Generation**: Generate flashcards from any open note using the available commands. The flashcards are appended to your note within a blockquote.
 
 ### Customization Options
