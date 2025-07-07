@@ -1,7 +1,7 @@
 {
   "id": "flashcards-llm",
   "name": "Flashcards LLM",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "minAppVersion": "0.15.0",
   "description": "Use Large Language Models (such as ChatGPT) to automatically generate flashcards from obsidian notes",
   "author": "Marco Pampaloni",

@@ -1,5 +1,5 @@
 import { App, MarkdownView, PluginSettingTab, Setting } from 'obsidian';
-import { availableChatModels, availableCompletionModels } from "./models";
+import { availableChatModels, availableCompletionModels, availableReasoningModels, allAvailableModels } from "./models";
 import FlashcardsLLMPlugin from "./main"
 
 // TODO:
@@ -13,6 +13,7 @@ export interface FlashcardsSettings {
   flashcardsCount: number;
   additionalPrompt: string;
   maxTokens: number;
+  reasoningEffort: string;
   streaming: boolean;
   hideInPreview: boolean;
   tag: string;
@@ -52,14 +53,28 @@ export class FlashcardsSettingsTab extends PluginSettingTab {
     .setDesc("Which language model to use")
     .addDropdown((dropdown) =>
       dropdown
-      .addOptions(Object.fromEntries(availableCompletionModels().map(k => [k, k])))
-      .addOptions(Object.fromEntries(availableChatModels().map(k => [k, k])))
+	  .addOptions(Object.fromEntries(allAvailableModels().map(k => [k, k])))
       .setValue(this.plugin.settings.model)
       .onChange(async (value) => {
         this.plugin.settings.model = value;
+		reasoningEffortSetting.setDisabled(!availableReasoningModels().includes(value));
         await this.plugin.saveSettings();
       })
     );
+
+    const reasoningEffortSetting = new Setting(containerEl)
+    .setName("Reasoning Effort")
+    .setDesc("Constrains effort on reasoning for reasoning models.")
+    .addDropdown((dropdown) =>
+      dropdown
+	  .addOptions(Object.fromEntries(["low", "medium", "high"].map(k => [k, k])))
+      .setValue(this.plugin.settings.reasoningEffort)
+      .onChange(async (value) => {
+        this.plugin.settings.reasoningEffort = value;
+        await this.plugin.saveSettings();
+      })
+    );
+	reasoningEffortSetting.setDisabled(!availableReasoningModels().includes(this.plugin.settings.model));
 
     containerEl.createEl("h3", {text: "Preferences"})
 

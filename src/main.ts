@@ -1,6 +1,5 @@
 import { App, Editor, EditorPosition, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { generateFlashcards } from "./flashcards";
-import { availableChatModels, availableCompletionModels } from "./models";
 import { InputModal } from "./components"
 import { FlashcardsSettings, FlashcardsSettingsTab } from "./settings"
 
@@ -18,6 +17,7 @@ const DEFAULT_SETTINGS: FlashcardsSettings = {
   flashcardsCount: 3,
   additionalPrompt: "",
   maxTokens: 300,
+  reasoningEffort: "low",
   streaming: true,
   hideInPreview: true,
   tag: "#flashcards"
@@ -135,6 +135,7 @@ export default class FlashcardsLLMPlugin extends Plugin {
         additionalPrompt,
         maxTokens,
         multiline,
+		configuration.reasoningEffort,
         streaming
       )
 

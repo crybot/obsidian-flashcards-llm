@@ -1,7 +1,7 @@
 import { App, Modal, Setting } from "obsidian"
 import { FlashcardsSettings } from "./settings"
 import FlashcardsLLMPlugin from "./main"
-import { availableCompletionModels, availableChatModels } from "./models"
+import { availableCompletionModels, availableChatModels, availableReasoningModels, allAvailableModels } from "./models"
 
 
 // TODO:
@@ -30,13 +30,25 @@ export class InputModal extends Modal {
     .setName("Model")
     .addDropdown((dropdown) =>
       dropdown
-      .addOptions(Object.fromEntries(availableCompletionModels().map(k => [k, k])))
-      .addOptions(Object.fromEntries(availableChatModels().map(k => [k, k])))
+	  .addOptions(Object.fromEntries(allAvailableModels().map(k => [k, k])))
       .setValue(this.configuration.model)
       .onChange(async (value) => {
+		reasoningEffortSetting.setDisabled(!availableReasoningModels().includes(value));
         this.configuration.model = value
       })
     );
+
+    const reasoningEffortSetting = new Setting(contentEl)
+    .setName("Reasoning Effort")
+    .addDropdown((dropdown) =>
+      dropdown
+	  .addOptions(Object.fromEntries(["low", "medium", "high"].map(k => [k, k]))) // TODO: refactor reasoning entries
+      .setValue(this.configuration.reasoningEffort)
+      .onChange(async (value) => {
+        this.configuration.reasoningEffort = value;
+      })
+    );
+	reasoningEffortSetting.setDisabled(!availableReasoningModels().includes(this.configuration.model));
 
     new Setting(contentEl)
     .setName("Number of flashcards to generate")
